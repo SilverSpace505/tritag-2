@@ -21,7 +21,7 @@ class Wave {
         }
     }
     draw() {
-        ui.circle(...cv2(this.x, this.y), this.csize*camera.zoom, [0, 0, 0, 0], {outlineSize: 7.5*camera.zoom, outlineColour: [this.colour[0], this.colour[1], this.colour[2], this.colour[3]*(1-Math.abs(0.5-this.csize/this.ogsize)*2)]})
+        ui.circle(...tsc(this.x, this.y), this.csize*camera.zoom, [0, 0, 0, 0], {outlineSize: 7.5*camera.zoom, outlineColour: [this.colour[0], this.colour[1], this.colour[2], this.colour[3]*(1-Math.abs(0.5-this.csize/this.ogsize)*2)]})
     }
 }
 
@@ -44,7 +44,7 @@ class PShadow {
     }
     draw() {
         ctx.save()
-        ctx.translate(...cv2(this.x, this.y))
+        ctx.translate(...tsc(this.x, this.y))
         ctx.rotate(this.angle)
 
         ctx.beginPath()
@@ -78,6 +78,6 @@ class Line {
         if (this.time >= this.lifetime) this.dead = true
     }
     draw() {
-        ui.line(...cv2(this.x1, this.y1), ...cv2(this.x2, this.y2), this.size*camera.zoom, [this.colour[0], this.colour[1], this.colour[2], this.colour[3]*(1-this.time/this.lifetime)])
+        ui.line(...tsc(this.x1, this.y1), ...tsc(this.x2, this.y2), this.size*camera.zoom, [this.colour[0], this.colour[1], this.colour[2], this.colour[3]*(1-this.time/this.lifetime)])
     }
 }

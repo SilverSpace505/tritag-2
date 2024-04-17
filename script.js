@@ -23,6 +23,7 @@ var iaccumulator = 0
 var jKeysT = {}
 var keysT = {}
 var jKeysT2 = {}
+var fps2 = 0
 
 var selected = 1
 var sLayer = 0
@@ -440,6 +441,10 @@ function update(timestamp) {
         sendData()
     }
 
+    if (keys["KeyQ"]) {
+        ui.text(20*su, 35*su, 50*su, fps2)
+    }
+
     input.updateInput()
 }
 
@@ -465,6 +470,7 @@ function tsc(x, y, parallax=1) {
 
 setInterval(() => {
     console.log(tps, fps)
+    fps2 = fps
     tps = 0
     fps = 0
 }, 1000)

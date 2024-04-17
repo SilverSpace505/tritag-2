@@ -167,6 +167,8 @@ function update(timestamp) {
     ui.getSu()
     input.setGlobals()
 
+    player.username = username
+
     jKeysT2 = {...jKeysT2, ...jKeys}
 
     if (wConnect && !document.hidden) {
@@ -176,7 +178,15 @@ function update(timestamp) {
 
     for (let player in playerData) {
         if (id != player && !(player in players)) {
-            players[player] = {x: 0, lx: 0, ly: 0, y: 0, frame: 1, angle: 0, h: 1, langle: 0, lh: 1, lastu: time}
+            // players[player] = {x: 0, lx: 0, ly: 0, y: 0, frame: 1, angle: 0, dashing: false, langle: 0, lastu: time, flipping: 0, flips: 0, rotated: 0, lflipping: 0, lflips: 0, lrotated: 0}
+            players[player] = new Player(0, 0)
+            players[player].lastu = time
+            players[player].lflipping = 0
+            players[player].lflips2 = 0
+            players[player].lrotated = 0
+            players[player].lx2 = 0
+            players[player].ly2 = 0
+            players[player].langle2 = 0
         }
     }
 
@@ -184,21 +194,27 @@ function update(timestamp) {
         if (id == player || !(player in playerData)) {
             delete players[player]
         } else {
-            playerData[player].framesT += delta
-            while (playerData[player].framesT > 1/10 / playerData[player].framesA && playerData[player].frames.length > 1) {
-                playerData[player].frames.splice(0, 1)
-                playerData[player].framesT -= 1/10 / playerData[player].framesA
+            let factor = Math.min(Math.max((time - players[player].lastu), 0), 0.1)*10
+            players[player].colour = playerData[player].colour
+            players[player].x = lerp(players[player].lx2, playerData[player].x, factor)
+            players[player].y = lerp(players[player].ly2, playerData[player].y, factor)
+            players[player].angle = lerp(players[player].langle2, playerData[player].angle, factor)
+            players[player].flipping = lerp(players[player].lflipping, playerData[player].flipping, factor)
+            players[player].rotated = lerp(players[player].lrotated, playerData[player].rotated, factor)
+            players[player].lx = players[player].x; players[player].ly = players[player].y; players[player].langle = players[player].angle
+            if (!playerData[player].dashing && players[player].dashing) {
+                players[player].ldx = null
+                players[player].ldy = null
             }
-            if (time - players[player].lastu < 0.1) {
-                players[player].x += (playerData[player].x - players[player].lx) * delta*10
-                players[player].y += (playerData[player].y - players[player].ly) * delta*10
-                players[player].angle += (playerData[player].angle - players[player].langle) * delta*10
-                players[player].frame = playerData[player].frames[0]
-                players[player].h += (playerData[player].h - players[player].lh) * delta*10
+            if (playerData[player].dashing && !players[player].dashing) {
+                if (players[player].ldx == null) players[player].ldx = players[player].x
+                if (players[player].ldy == null) players[player].ldy = players[player].y
             }
-
+            players[player].dashing = playerData[player].dashing
+            players[player].shifting = playerData[player].shifting
+            players[player].username = playerData[player].username
             for (let key in players[player]) {
-                if (isNaN(players[player][key])) {
+                if (isNaN(players[player][key]) && !players[player][key] && !Array.isArray(players[player][key]) && key != "ldx" && key != "ldy") {
                     players[player][key] = 0
                 }
             }
@@ -224,6 +240,12 @@ function update(timestamp) {
     startTime = performance.now()
     while ((accumulator >= tdelta || keys["KeyT"]) && performance.now() - startTime < Math.min(1000/120)) {
         gameTick()
+        for (let player in players) {
+            players[player].flips = playerData[player].flips
+            players[player].particlesTick()
+            let factor = Math.min(Math.max((time - players[player].lastu), 0), 0.1)*10
+            players[player].flips = lerp(players[player].lflips2, playerData[player].flips, factor)
+        }
         jKeysT = {}
         lastTickTime = time
         tps++
@@ -232,14 +254,14 @@ function update(timestamp) {
 
     if (jKeys["Tab"]) {
         editor = !editor
-        if (editor) {
-            sets = JSON.parse(savedSets)
-        } else {
-            savedSets = JSON.stringify(sets)
-            newSets = JSON.parse(savedNewSets)
-            loadNewSets(newSets)
-        }
-        chunks = {}
+        // if (editor) {
+        //     sets = JSON.parse(savedSets)
+        // } else {
+        //     savedSets = JSON.stringify(sets)
+        //     newSets = JSON.parse(savedNewSets)
+        //     loadNewSets(newSets)
+        // }
+        // chunks = {}
     }
     // editor = false
 
@@ -268,14 +290,14 @@ function update(timestamp) {
         if (layer < 1 && (layer == sLayer || !editor || !keys["KeyF"])) drawLayer(layer)
     }
 
-    for (let player in players) {
-        ui.text(...tsc(players[player].x, players[player].y + (26*pxs/2 + 20) * players[player].h), 25*camera.zoom, playerData[player].username, {align: "center"})
-    }
-
     for (let i = 0; i < particles.length; i++) {
         particles[i].tick()
         if (particles[i].dead) {particles.splice(i, 1); i--; continue}
         particles[i].draw()
+    }
+
+    for (let player in players) {
+        players[player].draw()
     }
 
     player.draw()
@@ -393,7 +415,7 @@ function update(timestamp) {
     usernameT.hover()
     usernameT.draw()
 
-    colourButton.bgColour = baseColours[player.colour]
+    colourButton.bgColour = [player.colour[0], player.colour[1], player.colour[2], 1]
     colourButton.set(canvas.width - 350*su, 35*su, 50*su, 50*su)
     colourButton.textSize = 20*su
     colourButton.basic()
@@ -402,12 +424,13 @@ function update(timestamp) {
     if (colourButton.hovered() && mouse.lclick) {
         colourButton.click()
         let coloursl = Object.keys(baseColours)
-        let i = coloursl.indexOf(player.colour)
+        let i = coloursl.indexOf(player.colourN)
         i++
         if (i > 3) {
             i = 0
         }
-        // player.colour = coloursl[i]
+        player.colourN = coloursl[i]
+        player.colour = baseColours[coloursl[i]]
     }
 
     saveGame()

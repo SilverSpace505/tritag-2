@@ -6,9 +6,11 @@ class Player {
         this.vx = 0
         this.vy = 0
         this.angle = Math.PI
-        this.speed = 1000
+        this.speed = 2000
         this.angleSpeed = Math.PI*2
         this.flipping = 0
+        this.maxFlips = 4
+        this.shiftMultiply = 2
         this.flips = 0
         this.rotated = 0
         this.lx = this.x
@@ -23,7 +25,8 @@ class Player {
         this.flipA = 0
         this.decreaseA = 0
         this.lflips = 0
-        this.colour = [0, 127, 255]
+        this.colourN = "blue"
+        this.colour = [0, 0, 0]
         this.shifting = false
         this.flipx = 0
         this.flipy = 0
@@ -39,13 +42,14 @@ class Player {
         this.cPoints = []
         this.colliding = []
         this.fixD = 16
+        this.username = ""
         
         this.width = 50
         this.height = 50
         this.time = 0
     }
     tick() {
-        if (Math.sqrt((this.x-this.lx)**2 + (this.y-this.ly)**2) < this.speed*tdelta) {
+        if (Math.sqrt((this.x-this.lx)**2 + (this.y-this.ly)**2) < this.speed*tdelta/2) {
             if (this.dashing) {
                 this.ldx = null
                 this.ldy = null
@@ -60,11 +64,11 @@ class Player {
         let mx = 0
         let my = 0
 
-        this.shifting = keysT["ShiftLeft"]
+        this.shifting = Boolean(keysT["ShiftLeft"])
 
         if (this.shifting) {
-            this.speed /= 2
-            this.angleSpeed *= 2
+            this.speed /= this.shiftMultiply
+            this.angleSpeed *= this.shiftMultiply
         }
 
         if (keysT["KeyW"] && !editor) {
@@ -118,8 +122,8 @@ class Player {
         }
 
         if (this.shifting) {
-            this.speed *= 2
-            this.angleSpeed /= 2
+            this.speed *= this.shiftMultiply
+            this.angleSpeed /= this.shiftMultiply
         }
 
         if (this.flipping <= 0) {
@@ -128,41 +132,25 @@ class Player {
 
         if (Math.abs(this.rotated) >= Math.PI*1.75) {
             let dir = this.rotated / Math.abs(this.rotated)
-            if (this.flips < 4) {
-                this.flipA = 1
-                particles.push(new Wave(this.x, this.y, 50*su, -3, [this.colour[0], this.colour[1], this.colour[2], 1]))
-            }
+            // if (this.flips < 4) {
+            //     this.flipA = 1
+            //     // particles.push(new Wave(this.x, this.y, 50*su, -3, [this.colour[0], this.colour[1], this.colour[2], 1]))
+            // }
             this.flips += 1
-            if (this.flips > 4) {
-                this.flips = 4
+            if (this.flips > this.maxFlips) {
+                this.flips = this.maxFlips
             }
             this.rotated -= Math.PI*2*dir
             this.flipping = 2
         }
 
         if (this.flipping <= 0) {
+            this.flipping = 0
             this.flips -= tdelta/3
             if (this.flips < 0) {
                 this.flips = 0
             }
         }
-
-        this.shadowCooldown -= tdelta
-        if ((this.shifting || this.dashing || this.flipping > 0) && this.shadowCooldown <= 0) {
-            this.shadowCooldown = 1/20
-            if (this.shifting) {
-                particles.push(new PShadow(this.x, this.y, this.viangle, 1, 1, [this.colour[0], this.colour[1], this.colour[2], 0.5]))
-            } else if (this.flipping > 0) {
-                particles.push(new PShadow(this.x, this.y, this.viangle, 1, 0.5, [this.colour[0], this.colour[1], this.colour[2], 0.35]))
-            }
-            if (this.dashing) {
-                particles.push(new Line(this.ldx, this.ldy, this.x, this.y, 30, 1, [this.colour[0], this.colour[1], this.colour[2], 0.5]))
-                this.ldx = this.x
-                this.ldy = this.y
-            }
-        }
-
-       
 
         this.cPoints = []
         this.cPoints.push(rv2(0, -0.25, this.angle))
@@ -182,8 +170,8 @@ class Player {
         
         this.cPoints.push(rv2(0, 0.5, this.angle))
 
-        this.vx = lerp(this.vx, 0, tdelta*60*(1 - (editor ? 0.8 : 0.99)))
-        this.vy = lerp(this.vy, 0, tdelta*60*(1 - (editor ? 0.8 : 0.99)))
+        this.vx = lerp(this.vx, 0, tdelta*60*(1 - (editor ? 0.8 : 0.95)))
+        this.vy = lerp(this.vy, 0, tdelta*60*(1 - (editor ? 0.8 : 0.95)))
 
         // this.vy += 500*tdelta
 
@@ -197,12 +185,6 @@ class Player {
         }
 
         // this.move(this.vx*tdelta, this.vy*tdelta, 1)
-
-        if (Math.ceil(this.flips) < Math.ceil(this.lflips)) {
-            this.decreaseA = 1
-            particles.push(new Wave(this.x, this.y, 50*su, 3, [this.colour[0], this.colour[1], this.colour[2], 0.5]))
-        }
-        this.lflips = this.flips
 
         this.covers = {}
         for (let cover in covers) {
@@ -234,6 +216,34 @@ class Player {
                 setTile(Math.floor(mw.x/ts.x), Math.floor(mw.y/ts.y), sLayer, selected)
             }
         }
+    }
+    particlesTick() {
+
+        this.shadowCooldown -= tdelta
+        if ((this.shifting || this.dashing || this.flipping > 0) && this.shadowCooldown <= 0) {
+            this.shadowCooldown = 1/20
+            if (this.shifting) {
+                particles.push(new PShadow(this.x, this.y, this.viangle, 1, 1, [this.colour[0], this.colour[1], this.colour[2], 0.5]))
+            } else if (this.flipping > 0) {
+                particles.push(new PShadow(this.x, this.y, this.viangle, 1, 0.5, [this.colour[0], this.colour[1], this.colour[2], 0.35]))
+            }
+            if (this.dashing) {
+                particles.push(new Line(this.ldx, this.ldy, this.x, this.y, 30, 1, [this.colour[0], this.colour[1], this.colour[2], 0.5]))
+                this.ldx = this.x
+                this.ldy = this.y
+            }
+        }
+
+        if (Math.ceil(this.flips) < Math.ceil(this.lflips)) {
+            this.decreaseA = 1
+            particles.push(new Wave(this.x, this.y, 80, 3, [this.colour[0], this.colour[1], this.colour[2], 0.5]))
+        }
+
+        if (Math.ceil(this.flips) > Math.ceil(this.lflips)) {
+            this.flipA = 1
+            particles.push(new Wave(this.x, this.y, 80, -3, [this.colour[0], this.colour[1], this.colour[2], 1]))
+        }
+        this.lflips = this.flips
     }
     isColliding() {
         if (editor) return false
@@ -435,7 +445,7 @@ class Player {
 
         ui.circle(0, 0, radius, [255, 255, 255, 1])
 
-        let factor =  Math.min(this.flips/4 + Math.abs(this.rotated)/(Math.PI*1.5)/4, 1)
+        let factor =  Math.min(this.flips/this.maxFlips + Math.abs(this.rotated)/(Math.PI*1.5)/this.maxFlips, 1)
 
         ctx.beginPath()
         ctx.arc(0, 0, radius*0.65, 0, factor*Math.PI*2)
@@ -445,7 +455,7 @@ class Player {
         ctx.fill()
 
         ctx.beginPath()
-        ctx.arc(0, 0, radius*0.65, 0, this.flips/4*Math.PI*2)
+        ctx.arc(0, 0, radius*0.65, 0, this.flips/this.maxFlips*Math.PI*2)
         ctx.lineTo(0, 0)
         ctx.closePath()
         ctx.fillStyle = `rgb(${colour[0]*(this.flips/4)*1.5}, ${colour[1]*(this.flips/4)*1.5}, ${colour[2]*(this.flips/4)*1.5})`
@@ -471,5 +481,8 @@ class Player {
                 }
             }
         }
+
+        // console.log(this.username)
+        ui.text(...tsc(this.vix, this.viy+55), 25*camera.zoom, this.username, {align: "center"})
     }
 }

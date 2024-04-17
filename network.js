@@ -42,7 +42,7 @@ function connectToServer() {
     ws = new WebSocket("wss://server.silverspace.online:443")
 
     ws.addEventListener("open", (event) => {
-        sendMsg({connect: "platformer"}, true)
+        sendMsg({connect: "tritag-2"}, true)
     })
 
     ws.addEventListener("message", (event) => {
@@ -80,10 +80,13 @@ function connectToServer() {
                     playerData[player].framesT = 0
                 }
                 if (player in players) {
-                    players[player].lx = players[player].x
-                    players[player].ly = players[player].y
-                    players[player].langle = players[player].angle
-                    players[player].lh = players[player].h
+                    players[player].lx2 = players[player].x
+                    players[player].ly2 = players[player].y
+                    players[player].langle2 = players[player].angle
+                    players[player].lflips2 = players[player].flips
+                    players[player].lflipping = players[player].flipping
+                    players[player].lrotated = players[player].rotated
+
                     players[player].lastu = time
                 }
             }
@@ -104,13 +107,14 @@ function sendData() {
     data = {
         x: Math.round(player.x*100)/100,
         y: Math.round(player.y*100)/100,
-        frames: player.frames,
         angle: player.angle,
-        scale: player.ball ? player.ballDir : player.dir,
-        ball: player.ball,
-        h: player.h,
         username: username,
-        colour: player.colour,
+        flips: player.flips,
+        dashing: player.dashing,
+        shifting: player.shifting,
+        flipping: player.flipping,
+        rotated: player.rotated,
+        colour: player.colour
     }
     let newData = {}
     for (let key in data) {
@@ -118,6 +122,5 @@ function sendData() {
             newData[key] = data[key]
         }
     }
-    player.frames = []
     sendMsg({data: newData})
 }

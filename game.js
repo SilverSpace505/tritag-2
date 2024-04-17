@@ -6,13 +6,16 @@ var cs = {x: 10, y: 10}
 var rd = {x: 2, y: 2}
 
 var player = new Player(0, 150)
+var playerDrawer = new Player(0, 0)
 
 var baseColours = {
-    red: [204, 0, 0, 1],
-    yellow: [204, 198, 0, 1],
-    green: [0, 204, 10, 1],
-    blue: [0, 109, 204, 1]
+    red: [255, 0, 0],
+    yellow: [225, 225, 0],
+    green: [0, 255, 10],
+    blue: [0, 150, 255]
 }
+
+player.colour = baseColours.blue
 
 var camera = {x: player.x, y: player.y, zoom: 1}
 var cameraZoom = 0.875
@@ -181,13 +184,13 @@ fetch('world.txt')
     savedSets = JSON.stringify(sets)
     console.log("World loaded in", new Date().getTime() - startTime+"ms")
 
-    if (saveData) {
-        if ("savedSets" in saveData) {
-            loadNewSets(JSON.parse(saveData.savedSets))
-            newSets = JSON.parse(saveData.savedSets)
-            savedNewSets = saveData.savedSets
-        }
-    }
+    // if (saveData) {
+    //     if ("savedSets" in saveData) {
+    //         loadNewSets(JSON.parse(saveData.savedSets))
+    //         newSets = JSON.parse(saveData.savedSets)
+    //         savedNewSets = saveData.savedSets
+    //     }
+    // }
   })
   .catch(error => {
     console.error("Error fetching the file:", error)
@@ -299,4 +302,5 @@ function gameTick() {
     }  
 
     player.tick()
+    player.particlesTick()
 }

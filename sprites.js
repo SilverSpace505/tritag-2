@@ -44,7 +44,7 @@ class PShadow {
     }
     draw() {
         ctx.save()
-        ctx.translate(...tsc(this.x, this.y))
+        ctx.translate(tsc(this.x, this.y)[0], tsc(this.x, this.y)[1]+scenesD["game"].y)
         ctx.rotate(this.angle)
 
         ctx.beginPath()

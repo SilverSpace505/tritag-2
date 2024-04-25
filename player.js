@@ -43,6 +43,7 @@ class Player {
         this.colliding = []
         this.fixD = 16
         this.username = ""
+        this.flippingCooldown = 0
         
         this.width = 50
         this.height = 50
@@ -218,13 +219,20 @@ class Player {
         }
     }
     particlesTick() {
-
+        if (this.flippingCooldown != -1) this.flippingCooldown -= tdelta
         this.shadowCooldown -= tdelta
         if ((this.shifting || this.dashing || this.flipping > 0) && this.shadowCooldown <= 0) {
             this.shadowCooldown = 1/20
             if (this.shifting) {
                 particles.push(new PShadow(this.x, this.y, this.viangle, 1, 1, [this.colour[0], this.colour[1], this.colour[2], 0.5]))
             } else if (this.flipping > 0) {
+                if (this.flippingCooldown <= 0 && this.flippingCooldown != -1) {
+                    this.flippingCooldown = 0.3
+                    // let sound = playSound("flipping.wav", 0.1)
+                    // sound.addEventListener("loadedmetadata", () => {
+                    //     this.flippingCooldown = sound.duration-0.5
+                    // })
+                }
                 particles.push(new PShadow(this.x, this.y, this.viangle, 1, 0.5, [this.colour[0], this.colour[1], this.colour[2], 0.35]))
             }
             if (this.dashing) {
@@ -236,11 +244,13 @@ class Player {
 
         if (Math.ceil(this.flips) < Math.ceil(this.lflips)) {
             this.decreaseA = 1
+            playSoundV("dash.wav", 0.5)
             particles.push(new Wave(this.x, this.y, 80, 3, [this.colour[0], this.colour[1], this.colour[2], 0.5]))
         }
 
         if (Math.ceil(this.flips) > Math.ceil(this.lflips)) {
             this.flipA = 1
+            playSoundV("flipped.wav", 0.25)
             particles.push(new Wave(this.x, this.y, 80, -3, [this.colour[0], this.colour[1], this.colour[2], 1]))
         }
         this.lflips = this.flips
@@ -404,7 +414,7 @@ class Player {
         var lighting = 0.2
 
         ctx.save()
-        ctx.translate(...tsc(this.vix, this.viy))
+        ctx.translate(tsc(this.vix, this.viy)[0], tsc(this.vix, this.viy)[1]+scenesD["game"].y)
         ctx.rotate(this.viangle)
 
         ctx.beginPath()
@@ -419,11 +429,11 @@ class Player {
 
         ctx.rotate(-this.viangle)
 
-        ui.rect(0, -17*camera.zoom, 100*camera.zoom, 25*camera.zoom, [colour[0]+colour[0]*lighting, colour[1]+colour[1]*lighting, colour[2]+colour[2]*lighting, 1])
+        ui.rect(0, -17*camera.zoom-scenesD["game"].y, 100*camera.zoom, 25*camera.zoom, [colour[0]+colour[0]*lighting, colour[1]+colour[1]*lighting, colour[2]+colour[2]*lighting, 1])
 
-        ui.rect(0, 17*camera.zoom, 100*camera.zoom, 25*camera.zoom, [colour[0]-colour[0]*lighting, colour[1]-colour[1]*lighting, colour[2]-colour[2]*lighting, 1])
+        ui.rect(0, 17*camera.zoom-scenesD["game"].y, 100*camera.zoom, 25*camera.zoom, [colour[0]-colour[0]*lighting, colour[1]-colour[1]*lighting, colour[2]-colour[2]*lighting, 1])
 
-        ui.rect(0, 0, 100*camera.zoom, 18*camera.zoom, [colour[0], colour[1], colour[2], 1])
+        ui.rect(0, 0-scenesD["game"].y, 100*camera.zoom, 18*camera.zoom, [colour[0], colour[1], colour[2], 1])
 
         ctx.restore()
 
@@ -435,10 +445,10 @@ class Player {
         ctx.moveTo(0, -12.5*camera.zoom)
 
         ctx.rotate(-this.viangle)
-        ctx.translate((this.lagx-this.vix)*camera.zoom, -(this.lagy-this.viy)*camera.zoom)
+        ctx.translate((this.lagx-this.vix)*camera.zoom, -(this.lagy-this.viy)*camera.zoom-scenesD["game"].y)
         // ctx.rotate(this.viangle)
 
-        ctx.lineTo(0, 0)
+        ctx.lineTo(0, 0+scenesD["game"].y)
         ctx.stroke()
 
         let radius = 10*camera.zoom + Math.sin(Math.min((1-this.flipA)*2, 1)*Math.PI)*5*camera.zoom - Math.sin(Math.min((1-this.decreaseA)*2, 1)*Math.PI)*5*camera.zoom

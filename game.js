@@ -589,6 +589,7 @@ function gameTick() {
 
     if (colourButton.hovered() && mouse.lclick) {
         colourButton.click()
+        playSoundV("click.wav", 0.5, 1, 0.25)
         let coloursl = Object.keys(baseColours)
         let i = coloursl.indexOf(player.colourN)
         i++

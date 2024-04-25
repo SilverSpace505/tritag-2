@@ -136,6 +136,7 @@ var audios = {}
 var audiosPlayed = false
 var loadedAudios = 0
 var totalAudios = 0
+var loadingA = 1
 
 function loadSound(path, amount) {
     audios[path] = []
@@ -163,6 +164,7 @@ function loadSound(path, amount) {
 loadSound("flipped.wav", 5)
 loadSound("dash.wav", 5)
 loadSound("play.wav", 1)
+loadSound("click.wav", 2)
 
 function getSound(path) {
     if (path in audios) {
@@ -312,8 +314,14 @@ function update(timestamp) {
         }
     }
 
-    if (keys["KeyQ"] || true) {
-        // ui.text(20*su, 80*su, 50*su, Math.round(loadedAudios/totalAudios*100)+"% Loaded")
+    if (loadingA > 0.01) {
+        ctx.globalAlpha = loadingA
+        ui.text(20*su, 80*su, 50*su, Math.round(loadedAudios/totalAudios*100)+"% Loaded")
+        ctx.globalAlpha = 1
+    }
+
+    if (loadedAudios >= totalAudios) {
+        loadingA = lerp(loadingA, 0, delta*15)
     }
 
     saveGame()

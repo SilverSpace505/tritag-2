@@ -216,7 +216,7 @@ var scene = "menu"
 var tscene = "menu"
 var switchA = 0
 var switchTA = 0
-var scenes = ["menu", "game"]
+var scenes = ["menu", "game", "info", "settings", "leaderboard"]
 var scenesD = {}
 for (let scene of scenes) {
     scenesD[scene] = {show: false, x: 0, y: 0}
@@ -228,13 +228,49 @@ function transitionAnimation(scene, tscene, a) {
         scenesD[scene].y = -a*canvas.height
         scenesD[tscene].y = (1-a)*canvas.height
     }
+    if (tscene == "info") {
+        scenesD[scene].x = a*canvas.width
+        scenesD[tscene].x = -(1-a)*canvas.width
+    }
+    if (tscene == "settings") {
+        scenesD[scene].x = -a*canvas.width
+        scenesD[tscene].x = (1-a)*canvas.width
+    }
+    if (tscene == "leaderboard") {
+        scenesD[scene].y = a*canvas.height
+        scenesD[tscene].y = -(1-a)*canvas.height
+    }
+
+
+    if (tscene == "menu") {
+        if (scene == "info") {
+            scenesD[scene].x = -a*canvas.width
+            scenesD[tscene].x = (1-a)*canvas.width
+        }
+        if (scene == "settings") {
+            scenesD[scene].x = a*canvas.width
+            scenesD[tscene].x = -(1-a)*canvas.width
+        }
+        if (scene == "leaderboard") {
+            scenesD[scene].y = -a*canvas.height
+            scenesD[tscene].y = (1-a)*canvas.height
+        }
+    }
 }
 
 function setScene(nscene) {
+    if (switchTA == 1) {
+        scenesD[scene].show = false
+        scenesD[scene].x = 0
+        scenesD[scene].y = 0
+        scene = tscene
+        scenesD[scene].x = 0
+        scenesD[scene].y = 0
+    }
     tscene = nscene
     scenesD[nscene].show = true
+    switchA = switchTA == 1 ? 1 - switchA : 0
     switchTA = 1
-    swtichA = 0
     transitionAnimation(scene, tscene, switchA)
 }
 
@@ -309,6 +345,12 @@ function update(timestamp) {
                 menuTick()
             } else if (scene == "game") {
                 gameTick()
+            } else if (scene == "info") {
+                infoTick()
+            } else if (scene == "settings") {
+                settingsTick()
+            } else if (scene == "leaderboard") {
+                leaderboardTick()
             }
             ui.setC()
         }

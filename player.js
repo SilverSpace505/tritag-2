@@ -250,13 +250,13 @@ class Player {
 
         if (Math.ceil(this.flips) < Math.ceil(this.lflips)) {
             this.decreaseA = 1
-            playSoundV("dash.wav", 0.5)
+            playSoundV("dash.wav", Math.min(Math.max((1000-Math.sqrt((player.x-this.x)**2 + (player.y-this.y)**2))/1000, 0), 1)*0.5)
             particles.push(new Wave(this.x, this.y, 80, 3, [this.colour[0], this.colour[1], this.colour[2], 0.5]))
         }
 
         if (Math.ceil(this.flips) > Math.ceil(this.lflips)) {
             this.flipA = 1
-            playSoundV("flipped.wav", 0.25)
+            playSoundV("flipped.wav", Math.min(Math.max((1000-Math.sqrt((player.x-this.x)**2 + (player.y-this.y)**2))/1000, 0), 1)*0.25)
             particles.push(new Wave(this.x, this.y, 80, -3, [this.colour[0], this.colour[1], this.colour[2], 1]))
         }
         this.lflips = this.flips

@@ -44,6 +44,12 @@ class Player {
         this.fixD = 16
         this.username = ""
         this.flippingCooldown = 0
+        this.interacting = false
+        this.raceA = 0
+        this.racing = false
+        this.time = 0
+        this.race = ""
+        this.showTime = 0
         
         this.width = 50
         this.height = 50
